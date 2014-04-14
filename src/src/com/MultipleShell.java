@@ -1,32 +1,26 @@
 package src.com;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.lang.invoke.VolatileCallSite;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 
 public class MultipleShell {
+
 	private JSch jsch = new JSch();
-	private Channel channel;
-	private Session session;
 	private int port = 22;
 	private int sessionTimeOut = 3000;
-	private PrintStream shellStream;
-	public InputStream stdOut;
 	
-	public ArrayList<Session> sessions;
-	private ArrayList<HostVo> hostList;
-	private int maxThread = 8;
-	private ExecutorService executorService;
+	public volatile Map<HostVo, SSHRunner> runners;
+	private volatile ArrayList<HostVo> hostList;
+	private int maxThread = 2 * 4;
+	public ExecutorService executorService;
 	private volatile int currentPosition = -1;
 	private int lastPosition = -1;
 	
@@ -36,98 +30,60 @@ public class MultipleShell {
 			this.maxThread = maxThread;
 		}
 		
-		this.executorService = Executors.newFixedThreadPool(maxThread);
+		this.executorService = Executors.newFixedThreadPool(this.maxThread);
 		this.setHostList(hostList);
-		this.lastPosition = hostList.size();
-		this.sessions = new ArrayList<Session>(this.maxThread);
+		this.setLastPosition(hostList.size());
+		this.runners = new HashMap<HostVo, SSHRunner>();
 		System.out.println("## Create MultipleShell");
 	}
 	
 	public synchronized void executeAll() {
 		
-		for (final HostVo host : hostList) {
-			executorService.execute(new SSHRunner(host));
-		}
-		
-		executorService.shutdown();
-	}
-
-
-	private synchronized HostVo getCurrentHost() {
-
-		while(true){
-			if(hostList != null && currentPosition > 0 && lastPosition > 0 && currentPosition <= lastPosition && sessions.size() < maxThread){
-				break;
+		try {
+			setCurrentPosition(0);
+			
+			for (final HostVo host : hostList) {
+				
+				if(host.getPort() <= 0){
+					host.setPort(port);
+				}
+				
+				if(host.getSessionTimeOut() <= 0){
+					host.setSessionTimeOut(sessionTimeOut);
+				}
+				
+				final Session session = jsch.getSession(host.getUser(), host.getHost(), host.getPort());
+				final SSHRunner runner = new SSHRunner(session, host);
+				runners.put(host, runner);
+				executorService.execute(runner);
+				setCurrentPosition(getCurrentPosition() + 1);
 			}
 			
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			dispose();
+		} catch (JSchException | IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void dispose() {
+		
+		if(runners !=null && runners.size() > 0)
+		{
+			for (final HostVo host : hostList) {
+
+				SSHRunner runner = runners.get(host);
+				
+				if (runner != null) {
+					runner.dispose();
+				}
+
+				runner = null;
+				runners.remove(host);
 			}
+			
 		}
 		
-		return hostList.get(currentPosition);
-	}
-
-	public void connect(String host, String user, String password)
-			throws JSchException {
-		connect(host, user, password, this.port, this.sessionTimeOut);
-	}
-
-	public void connect(String host, String user, String password, int port)
-			throws JSchException {
-		connect(host, user, password, port, this.sessionTimeOut);
-	}
-
-	public void connect(String host, String user, String password, int port,
-			int sessionTimeOut) throws JSchException {
-		this.session = this.jsch.getSession(user, host, port);
-		this.session.setConfig("StrictHostKeyChecking", "no");
-		this.session.setPassword(password);
-		this.session.connect(sessionTimeOut);
-		this.channel = this.session.openChannel("shell");
-
-		OutputStream out = null;
-		try {
-			out = this.channel.getOutputStream();
-		} catch (IOException e) {
-			throw new JSchException("Connection Error");
-		}
-
-		this.shellStream = new PrintStream(out, true);
-		this.channel.connect();
-	}
-
-	public void execute(String[] commandSet) throws InterruptedException, IOException
-  {
-    for (String command : commandSet) {
-      this.shellStream.println(command.trim());
-    }
-
-    if (!("exit".equals(commandSet[(commandSet.length - 1)])))
-    {
-      this.shellStream.println("exit");
-    }
-    this.shellStream.close();
-    this.stdOut = this.channel.getInputStream();
-
-    while (!(this.channel.isClosed()))
-    {
-      Thread.sleep(10L);
-    }
-  }
-
-	public void disconnect() {
-		if (this.stdOut != null) {
-			this.stdOut = null;
-		}
-
-		if (this.channel != null) {
-			this.channel.disconnect();
-		}
-		if (this.session != null)
-			this.session.disconnect();
+		jsch = null;
 	}
 
 	public ArrayList<HostVo> getHostList() {
@@ -136,6 +92,22 @@ public class MultipleShell {
 
 	public void setHostList(ArrayList<HostVo> hostList) {
 		this.hostList = hostList;
+	}
+	
+	public int getCurrentPosition() {
+		return currentPosition;
+	}
+
+	public void setCurrentPosition(int currentPosition) {
+		this.currentPosition = currentPosition;
+	}
+
+	public int getLastPosition() {
+		return lastPosition;
+	}
+
+	public void setLastPosition(int lastPosition) {
+		this.lastPosition = lastPosition;
 	}
 
 }

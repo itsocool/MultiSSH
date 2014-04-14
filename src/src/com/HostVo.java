@@ -8,7 +8,9 @@ public class HostVo {
 	private String user;
 	private String pass;
 	private int port;
+	private int sessionTimeOut = 3000;
 	private String[] commands;
+	public String data;
 	
 	public HostVo(String hostString){
 		String userAndPass = hostString.split("@")[0];
@@ -16,14 +18,14 @@ public class HostVo {
 		this.user = userAndPass.split(":")[0];
 		this.pass = userAndPass.replace(user + ":", "");
 		this.host = hostAndPort.split(":")[0];
-		this.port = Integer.parseInt(hostAndPort.split(":")[1]);
+		this.setPort(Integer.parseInt(hostAndPort.split(":")[1]));
 	}
 
 	@Override
 	public String toString() {
 		
 		String format = "[%d] Host = %s, User = %s, Pass = %s, Port = %d";
-		return String.format(format, new Date().getTime(), this.host, this.user, this.pass, this.port);
+		return String.format(format, new Date().getTime(), this.host, this.user, this.pass, this.getPort());
 	}
 
 	public String getHost() {
@@ -37,6 +39,10 @@ public class HostVo {
 	public String getPass() {
 		return pass;
 	}
+	
+	public void setPort(int port) {
+		this.port = port;
+	}
 
 	public int getPort() {
 		return port;
@@ -48,6 +54,14 @@ public class HostVo {
 
 	public String[] getCommands() {
 		return commands;
+	}
+
+	public int getSessionTimeOut() {
+		return this.sessionTimeOut;
+	}
+
+	public void setSessionTimeOut(int sessionTimeOut) {
+		this.sessionTimeOut = sessionTimeOut;
 	}
 	
 }

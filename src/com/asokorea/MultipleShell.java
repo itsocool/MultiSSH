@@ -1,5 +1,6 @@
 package com.asokorea;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,9 +26,13 @@ public class MultipleShell {
 	private int lastPosition = -1;
 	public String logDir;
 	
-	public MultipleShell(final ArrayList<HostVo> hostList, final int maxThread){
+	public MultipleShell(final ArrayList<HostVo> hostList, final File logDir){
+		this(hostList, logDir, 0, 0);
+	}
+	
+	public MultipleShell(final ArrayList<HostVo> hostList, final File logDir, final int maxThread, final int sessionTimeOut){
 		
-		if(maxThread > 0 && maxThread < 32){
+		if(maxThread > 0 && maxThread < 128){
 			this.maxThread = maxThread;
 		}
 		
@@ -35,6 +40,7 @@ public class MultipleShell {
 		this.setHostList(hostList);
 		this.setLastPosition(hostList.size());
 		this.runners = new HashMap<HostVo, SSHRunner>();
+		this.sessionTimeOut = (sessionTimeOut > 0) ? sessionTimeOut : this.sessionTimeOut;
 		System.out.println("## Create MultipleShell");
 	}
 	

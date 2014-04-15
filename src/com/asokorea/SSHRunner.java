@@ -1,9 +1,13 @@
-package com;
+package com.asokorea;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.JSchException;
@@ -11,20 +15,20 @@ import com.jcraft.jsch.Session;
 
 public class SSHRunner implements Runnable {
 
-	public volatile HostVo host;
-	public volatile Session session;
-	public volatile Channel channel;
-	public volatile InputStream stdOut;
-	public volatile InputStream stdErr;
-	public volatile PrintStream shellStream;
-	public volatile boolean isRunning = false;
+	public HostVo host;
+	public Session session;
+	public Channel channel;
+	public InputStream stdOut;
+	public InputStream stdErr;
+	public PrintStream shellStream;
+	public boolean isRunning = false;
+	private int sessionTimeOut = 3000;
 	
 	public SSHRunner(final Session session, final HostVo host) throws JSchException, IOException{
 		this.host = host;
 		this.session = session;
 		this.session.setConfig("StrictHostKeyChecking", "no");
-		this.session.setPassword(this.host.getPass());
-		this.session.connect(this.host.getSessionTimeOut());
+		this.session.setTimeout(sessionTimeOut);
 		this.channel = this.session.openChannel("shell");
 	}
 	
@@ -32,12 +36,11 @@ public class SSHRunner implements Runnable {
 	public void run() {
 		try {
 			
-			OutputStream out = null;
 			isRunning = true;
+			String data = "";
 			
 			try {
-				out = this.channel.getOutputStream();
-				this.shellStream = new PrintStream(out, true);
+				this.shellStream = new PrintStream(this.channel.getOutputStream(), true);
 				this.channel.connect();
 				this.stdOut = channel.getInputStream();
 				this.stdErr = channel.getExtInputStream();
@@ -45,13 +48,14 @@ public class SSHRunner implements Runnable {
 				for (String command : host.getCommands()) {
 					shellStream.println(command.trim());
 				}
-				
-				if(!"exit".equals(host.getCommands()[host.getCommands().length-1]))
+
+				if(host.getCommands() == null || !"exit".equals(host.getCommands()[host.getCommands().length-1]))
 				{
 					shellStream.println("exit");
 				}
+				
 				shellStream.close();
-				byte[] byteArray = new byte[4096];
+				byte[] byteArray = new byte[1024 * 4];
 				
 				while(this.isRunning)
 				{
@@ -66,14 +70,32 @@ public class SSHRunner implements Runnable {
 						if( i < 0 ){
 							break;
 						}
-						host.data += new String(byteArray, 0, i);
+						data += new String(byteArray, 0, i);
 					}
 					
 					Thread.sleep(100);
 				}
 
-				System.out.println("### [RESULT] === " + host);
+				String fileName = "";
+
+				if(data != null && !"".equals(data.trim())){
+					
+					Pattern p = Pattern.compile("(^hostname )(.+)");
+					Matcher m = p.matcher(data);
+					Path path = host.getResultPath();
+					
+					if(m != null && m.groupCount() > 0 && m.group(2) != null){
+						path = path.resolve(m.group(2) + ".txt");
+					}else{
+						path = path.resolve(host.getHost() + ".err");
+					}
+					Files.write(path, data.getBytes("UTF-8"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+					host.setResultPath(path);
+				}
+				
+				System.out.println("[RESULT FILE]:" + fileName);
 				isRunning = false;
+				data = null;
 				
 			} catch (IOException | InterruptedException e) {
 				throw new JSchException("Connection Error");
@@ -116,5 +138,13 @@ public class SSHRunner implements Runnable {
 	public void dispose() {
 		close();
 		disconnect();
+	}
+
+	public int getSessionTimeOut() {
+		return sessionTimeOut;
+	}
+
+	public void setSessionTimeOut(int sessionTimeOut) {
+		this.sessionTimeOut = sessionTimeOut;
 	}
 }

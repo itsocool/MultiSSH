@@ -1,9 +1,14 @@
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import com.HostVo;
-import com.MultipleShell;
+import sun.misc.Launcher;
+
+import com.asokorea.HostVo;
+import com.asokorea.MultipleShell;
 
 public class MultiSSH {
 
@@ -14,6 +19,7 @@ public class MultiSSH {
 
 		Date sdt = new Date();
 		Date edt = null;
+		String basePath = Launcher.class.getResource("/").getPath();
 
 		try {
 			String[] hosts = args[0].split(";");
@@ -27,15 +33,32 @@ public class MultiSSH {
 					"exit"
 			};
 			
-			HostVo host;
+			File file = new File(basePath + "logs");
 			
-			for (String string : hosts) {
-				host = new HostVo(string);
-				host.setCommands(commands);
-				hostList.add(host);
+			if(file != null && !file.exists()){
+				file.mkdir();
 			}
 			
-			shell = new MultipleShell(hostList, 2);
+			HostVo vo;
+			
+			for (String string : hosts) {
+				if(string != null && string.trim().length() > 0){
+					String userAndPass = string.split("@")[0];
+					String hostAndPort = string.split("@")[1];
+					String user = userAndPass.split(":")[0];
+					String pass = userAndPass.replace(user + ":", "");
+					String host = hostAndPort.split(":")[0];
+					int port = Integer.parseInt(hostAndPort.split(":")[1]);
+					Path resultPath = Paths.get(basePath, "logs");
+					
+					vo = new HostVo(host, user, pass, commands, resultPath, port);
+					hostList.add(vo);
+				}
+			}
+			
+			shell = new MultipleShell(hostList, 16);
+			
+			shell.logDir = file.getAbsolutePath();
 			shell.executeAll();
 			shell.executorService.awaitTermination(3, TimeUnit.SECONDS);
 			System.out.println("###################### ShutDown ######################");
@@ -43,7 +66,13 @@ public class MultiSSH {
 			e.printStackTrace();
 			System.exit(1);
 		} finally {
-			shell.dispose();
+			if(shell != null)
+			{
+				shell.dispose();
+			}
+			
+			shell = null;
+			
 			showMemory();
 			edt = new Date();
 			System.out.println(Long.valueOf(edt.getTime() - sdt.getTime()) + "ms");

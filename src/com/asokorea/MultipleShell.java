@@ -1,4 +1,4 @@
-package com;
+package com.asokorea;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -23,6 +23,7 @@ public class MultipleShell {
 	public ExecutorService executorService;
 	private volatile int currentPosition = -1;
 	private int lastPosition = -1;
+	public String logDir;
 	
 	public MultipleShell(final ArrayList<HostVo> hostList, final int maxThread){
 		
@@ -47,13 +48,14 @@ public class MultipleShell {
 				if(host.getPort() <= 0){
 					host.setPort(port);
 				}
-				
-				if(host.getSessionTimeOut() <= 0){
-					host.setSessionTimeOut(sessionTimeOut);
-				}
+//				
+//				if(host.getSessionTimeOut() <= 0){
+//					host.setSessionTimeOut(sessionTimeOut);
+//				}
 				
 				final Session session = jsch.getSession(host.getUser(), host.getHost(), host.getPort());
 				final SSHRunner runner = new SSHRunner(session, host);
+				
 				runners.put(host, runner);
 				executorService.execute(runner);
 				setCurrentPosition(getCurrentPosition() + 1);

@@ -2,8 +2,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import src.com.HostVo;
-import src.com.MultipleShell;
+import com.HostVo;
+import com.MultipleShell;
 
 public class MultiSSH {
 

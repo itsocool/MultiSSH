@@ -7,20 +7,20 @@ import java.util.Date;
 
 public class HostVo {
 	
-	private String host;
+	private String ip;
+	private String hostName;
 	private String user;
 	private String pass;
 	private int port = 22;
 	private String[] commands;
-	private Path resultPath;
-	private File resutFile;
+	private File resultFile;
 	
-	public HostVo(String host, String user, String pass){
-		this(host, user, pass, null, FileSystems.getDefault().getPath(".", "logs"), 0);
+	public HostVo(String ip, String user, String pass){
+		this(ip, user, pass, null, FileSystems.getDefault().getPath(".", "logs"), 0);
 	}
 
-	public HostVo(String host, String user, String pass, String[] commands, Path resultPath, int port){
-		this.host = host;
+	public HostVo(String ip, String user, String pass, String[] commands, Path resultPath, int port){
+		this.ip = ip;
 		this.user = user;
 		this.pass = pass;
 		this.port = (port > 0) ? port : this.port;
@@ -29,15 +29,13 @@ public class HostVo {
 	
 	@Override
 	public String toString() {
-		
-		String format = "[%d] Host = %s, File = %s";
-		File file = this.resutFile;
-		String resultFileName = (file != null && file.exists()) ? file.getAbsolutePath() : "";
-		return String.format(format, new Date().getTime(), this.host, resultFileName);
+		String format = "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS] IP = %2$s, File = %3$s";
+		String resultFileName = (resultFile != null && resultFile.exists()) ? getResultFile().getAbsolutePath() : "file not exist";
+		return String.format(format, new Date(), hostName, ip, resultFileName);
 	}
 
 	public String getHost() {
-		return host;
+		return ip;
 	}
 
 	public String getUser() {
@@ -64,15 +62,19 @@ public class HostVo {
 		return commands;
 	}
 
-	public File getResutFile() {
-		return resutFile;
+	public String getHostName() {
+		return hostName;
 	}
 
-	public Path getResultPath() {
-		return resultPath;
+	public void setHostName(String hostName) {
+		this.hostName = hostName;
 	}
 
-	public void setResultPath(Path resultPath) {
-		this.resultPath = resultPath;
+	public File getResultFile() {
+		return resultFile;
+	}
+
+	public void setResultFile(File resultFile) {
+		this.resultFile = resultFile;
 	}
 }

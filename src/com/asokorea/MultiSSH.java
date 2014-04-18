@@ -1,20 +1,21 @@
 package com.asokorea;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 
-import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -26,132 +27,150 @@ public class MultiSSH {
 	private static MultipleShell shell;
 	private static String baseDir = Launcher.class.getResource("/").getPath();
 	private static String taskName = "_default_";
-	private static Path taskRootPath = null;
-	
+	private static String logDirName = "logs";
+	private static String taskXmlFileName = "task.xml";
+	private static File taskFile = null;
+	private static Path logPath = null;
+	private static int maxThreadPoolCount = 2;
+	private static int timeOut = 3 * 1000;
 	
 	public static void main(String[] args) {
 		
-		taskName = args[0];
-		taskRootPath = Paths.get(baseDir, "task", taskName);
+//		if(args != null && args.length > 0){
+//			taskName = args[0];
+//		}
 		
-		File hostFile = taskRootPath.resolve("hostlist.xml").toFile();
-		File commandFile = taskRootPath.resolve("command.sh").toFile();
-		
+		Document document = null;
+		String[] commands = null;
 		Date sdt = new Date();
 		Date edt = null;
-//		String commandFile = basePath + args[0];
-		BufferedReader br = null;
-		String sCurrentLine = null;
-		String line = null;
-		ArrayList<String> commandList = null;
-//
-		try {
-//			
-//			br = new BufferedReader(new FileReader(commandFile));
-//			commandList = new ArrayList<String>();
-//			hostList = new ArrayList<HostVo>();
-//			
-//			while ((sCurrentLine = br.readLine()) != null)
-//			{
-//				commandList.add(line);
-//			}
-//			
-//			if(commandList != null && commandList.size() > 0){
-//				String[] commands = commandList.toArray(new String[]{});
-//			}
-//			
-//			File logDir = new File(basePath + "logs");
-//			
-//			if(logDir != null && !logDir.exists()){
-//				logDir.mkdir();
-//			}
-//			
-//			HostVo vo;
-//			
-//			for (String string : hosts) {
-//				if(string != null && string.trim().length() > 0){
-//					String userAndPass = string.split("@")[0];
-//					String hostAndPort = string.split("@")[1];
-//					String user = userAndPass.split(":")[0];
-//					String pass = userAndPass.replace(user + ":", "");
-//					String host = hostAndPort.split(":")[0];
-//					int port = Integer.parseInt(hostAndPort.split(":")[1]);
-//					Path resultPath = Paths.get(basePath, "logs");
-//					
-//					vo = new HostVo(host, user, pass, commands, resultPath, port);
-//					hostList.add(vo);
-//				}
-//			}
-//			
-//			shell = new MultipleShell(hostList, logDir);
-//			shell.logDir = logDir.getAbsolutePath();
-//			shell.executeAll();
-//			shell.executorService.awaitTermination(3, TimeUnit.SECONDS);
-			System.out.println(baseDir);
-			System.out.println(taskName);
-			System.out.println(taskRootPath);
-			System.out.println(hostFile.getAbsolutePath());
-			System.out.println(commandFile.getAbsolutePath());
-//		} catch (InterruptedException e) {
-//			e.printStackTrace();
-//			System.exit(1);
-		} finally {
-			
-            try
-            {
-                if (br != null)
-                br.close();
-            } catch (IOException ex)
-            {
-                ex.printStackTrace();
-            }
 
-			if(shell != null)
-			{
-				shell.dispose();
-			}
+		System.out.println("###################### start ######################");
+		document = getXML(taskName);
+		commands = getCommand(document);
+		hostList = getHostList(document, commands);
+		logPath = getLogPath(taskName);
+		shell = new MultipleShell(hostList, maxThreadPoolCount, timeOut, logPath);
+		shell.executeAll();
 			
-			shell = null;
-			
-			showMemory();
-			edt = new Date();
-			System.out.println(Long.valueOf(edt.getTime() - sdt.getTime()) + "ms");
-			System.out.println("###################### finish ######################");
-			System.exit(0);
+		if(document != null){
+			document = null;
 		}
 		
+		if(shell != null)
+		{
+			shell.dispose();
+		}
+		
+		shell = null;
+		
+		showMemory();
+		edt = new Date();
+		System.out.println(Long.valueOf(edt.getTime() - sdt.getTime()) + "ms");
+		System.out.println("###################### finish ######################");
+		System.exit(0);
+	}
+
+	private static Document getXML(String taskName){
+		
+		Document document = null;
+		
+		try {
+			
+			Path path = new File(baseDir + "../task/" + taskName).toPath();
+			taskFile = path.resolve(taskXmlFileName).toFile();
+			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(taskFile.getCanonicalFile());
+		} catch (SAXException | IOException | ParserConfigurationException e) {
+			e.printStackTrace();
+		}
+		
+		return document;
 	}
 	
-	private ArrayList<HostVo> getHostList(String hostFilePath, String commandFilePath){
-		ArrayList<HostVo> result = null;
+	private static String[] getCommand(Document document){
+		
+		String[] result = null;
+		XPath xpath = null;
+		NodeList commandNodes = null;
+		int length = 0;
+		
 		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			Document document = builder.parse(new File(hostFilePath));
-			NodeList row = document.getElementsByTagName("row");
+			xpath = XPathFactory.newInstance().newXPath();
+			commandNodes = (NodeList)xpath.evaluate("//commands/command", document, XPathConstants.NODESET);
+			length = commandNodes.getLength();
+			result = new String[length];
 			
-			if(row != null && row.getLength() > 0){
-				result = new ArrayList<HostVo>();
-//				HostVo = 
-				
+			for (int i = 0; i < length; ++i) {
+				Node command = (Node) commandNodes.item(i);
+				result[i] = command.getTextContent();
 			}
+		} catch (XPathExpressionException e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+	
+	private static ArrayList<HostVo> getHostList(Document document, String[] commands){
+		
+		ArrayList<HostVo> result = null;
+		XPath xpath = null;
+		NodeList hostNodes = null;
+
+		try {
+			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(taskFile.getCanonicalFile());
+			xpath = XPathFactory.newInstance().newXPath();
+			hostNodes = (NodeList)xpath.evaluate("//hosts/host", document, XPathConstants.NODESET);
+			result = new ArrayList<HostVo>();
 			
-		} catch (SAXException | IOException | ParserConfigurationException e) {
+			for (int i = 0; i < hostNodes.getLength(); i++) {
+				NodeList children = hostNodes.item(i).getChildNodes();
+				String ip = null;
+				String user = null;
+				String pass = null;
+				
+				for (int j = 0; j < children.getLength(); j++) {
+					Node child = children.item(j);
+					
+					if("ip".equals(child.getNodeName())){
+						ip = child.getTextContent();
+					} else if("username".equals(child.getNodeName())){
+						user = child.getTextContent();
+					} else if("password".equals(child.getNodeName())){
+						pass = child.getTextContent();
+					}
+				}
+				
+				HostVo vo = new HostVo(ip, user, pass);
+				vo.setCommands(commands);
+				result.add(vo);
+			}
+		} catch (SAXException | IOException | ParserConfigurationException | XPathExpressionException e) {
 			e.printStackTrace();
 		}
 		return result;
 	}
 
-	private Document getCommad(String filePath){
-		Document document = null;
-		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			document = builder.parse(new File(filePath));
-		} catch (SAXException | IOException | ParserConfigurationException e) {
-			e.printStackTrace();
+	private static Path getLogPath(String taskName) {
+		
+		Path result = null;
+		File file = new File(baseDir).getParentFile();
+
+		result = Paths.get(file.getAbsolutePath(), "task", taskName);
+		file = result.toFile();
+		
+		if(file != null && !file.exists()){
+			file.mkdir();
 		}
-		return document;
+
+		result = Paths.get(file.getAbsolutePath(), logDirName);
+		file = result.toFile();
+		
+		if(file != null && !file.exists()){
+			file.mkdir();
+		}
+		
+		return result;
 	}
 	
 	private static void showMemory(){

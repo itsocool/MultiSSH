@@ -40,7 +40,7 @@ public class SSHRunner implements Runnable {
 	public void run() {
 
 		try {
-			this.session = jsch.getSession(host.getUser(), host.getHost(), host.getPort());
+			this.session = jsch.getSession(host.getUser(), host.getIP(), host.getPort());
 			this.session.setConfig("StrictHostKeyChecking", "no");
 			this.session.setPassword(host.getPass());
 			this.session.connect(sessionTimeOut);
@@ -50,8 +50,8 @@ public class SSHRunner implements Runnable {
 			this.stdOut = channel.getInputStream();
 			this.stdErr = channel.getExtInputStream();
 			this.channel.connect(sessionTimeOut);
-			System.out.println(host.toString() + " : CONNECTED");
-			
+			System.out.println(host.getMessage(MessageType.CONNECTED, "Start..."));
+
 			isRunning = true;
 			String data = "";
 			
@@ -81,8 +81,6 @@ public class SSHRunner implements Runnable {
 					}
 					data += new String(byteArray, 0, i);
 				}
-				
-				Thread.sleep(100);
 			}
 
 			shellStream.close();
@@ -101,7 +99,7 @@ public class SSHRunner implements Runnable {
 					if(hostName != null && hostName.length() > 0){
 						resultPath = logPath.resolve(hostName + ".txt");
 					}else{
-						resultPath = logPath.resolve(host.getHost() + ".err");
+						resultPath = logPath.resolve(host.getIP() + ".err");
 					}
 					
 					Files.write(resultPath, data.getBytes("UTF-8"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
@@ -109,13 +107,19 @@ public class SSHRunner implements Runnable {
 				
 				host.setHostName(hostName);
 				host.setResultFile(resultPath.toFile());
-				System.out.println("[RESULT] " + host.toString());
+				System.out.println(host.getMessage(MessageType.OUTPUT, "OK"));
 			}
 			
 			isRunning = false;
 			data = null;
-		} catch (IOException | InterruptedException | JSchException e) {
-			e.printStackTrace(System.err);
+		} catch (JSchException | IOException e) {
+			if(e.getMessage().indexOf("Connection refused") >= 0){
+				System.err.println(host.getMessage(MessageType.LOGINFAIL, e.getMessage()));
+			}else if(e.getMessage().indexOf("timeout") >= 0) {
+				System.err.println(host.getMessage(MessageType.TIMEOUT, e.getMessage()));
+			}else{
+				System.err.println(host.getMessage(MessageType.ERROR, e.getMessage()));
+			}
 		} finally {
 			dispose();
 		}

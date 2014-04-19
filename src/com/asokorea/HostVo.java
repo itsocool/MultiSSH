@@ -27,14 +27,49 @@ public class HostVo {
 		this.commands = commands;
 	}
 	
+	public String getTimeStamp(boolean includeDate) {
+		String format = (includeDate) ? "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS" : "%1$tH:%1$tM:%1$tS";
+		return String.format(format, new Date());
+	}
+	
 	@Override
 	public String toString() {
-		String format = "[%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS] IP = %2$s, File = %3$s";
-		String resultFileName = (resultFile != null && resultFile.exists()) ? getResultFile().getAbsolutePath() : "file not exist";
-		return String.format(format, new Date(), hostName, ip, resultFileName);
+		String format = "timeStamp:\"%s\", ip:\"%s\", hostName:\"%s\"";
+		
+		return String.format(format, getTimeStamp(true), ip, hostName);
+	}
+	
+	public String getMessage(String type, String message) {
+		
+		String result = null;
+		String format = "";
+		String fileName = (resultFile != null && resultFile.exists()) ? getResultFile().getName() : "";
+		long fileSize = (resultFile != null && resultFile.exists() && !resultFile.isDirectory()) ? resultFile.length() : 0;
+		message = (message == null || message.length() < 1) ? "" : message;
+		
+		switch (type) {
+			
+		case MessageType.OUTPUT:
+			format = "[%s] {timeStamp:\"%s\", ip:\"%s\", hostName:\"%s\", fileName:\"%s\", dataSize:\"%d\", message:\"%s\"}";
+			result = String.format(format, type, getTimeStamp(true), ip, hostName, fileName, fileSize, message);
+			break;
+			
+		case MessageType.CONNECTED:
+		case MessageType.LOGINFAIL:
+		case MessageType.TIMEOUT:
+		case MessageType.ERROR:
+			format = "[%s] {timeStamp:\"%s\", ip:\"%s\", message:\"%s\"}";
+			result = String.format(format, type, getTimeStamp(true), ip, message);
+			break;
+		
+		default:
+			break;
+		}
+		
+		return result;
 	}
 
-	public String getHost() {
+	public String getIP() {
 		return ip;
 	}
 

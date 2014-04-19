@@ -30,7 +30,6 @@ public class MultipleShell {
 	public volatile String[] commands = null;
 	public 	Collection<Future<?>> futures = new LinkedList<Future<?>>();
 
-	
 	public MultipleShell(final ArrayList<HostVo> hostList){
 		this(hostList, 0, 0, null);
 	}
@@ -61,12 +60,11 @@ public class MultipleShell {
 				final SSHRunner runner = new SSHRunner();
 				runners.put(host, runner);
 				runner.init(this.jsch, host, this.logPath, sessionTimeOut);
-//				executorService.execute(runner);
 				futures.add(executorService.submit(runner));
 				setCurrentPosition(getCurrentPosition() + 1);
-				Thread.sleep(10);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				System.err.println("[ERROR:SYSTEM] " + e.getMessage());
 			}
 		}
 		
@@ -74,7 +72,7 @@ public class MultipleShell {
 		    try {
 				future.get();
 			} catch (InterruptedException | ExecutionException e) {
-				e.printStackTrace();
+				System.err.println("[ERROR:SYSTEM] " + e.getMessage());
 				future.cancel(true);
 			}
 		}
@@ -108,6 +106,7 @@ public class MultipleShell {
 					executorService.shutdownNow();
 				}
 			} catch (InterruptedException ie) {
+				System.err.println("[ERROR:SYSTEM] " + ie.getMessage());
 				executorService.shutdownNow();
 				Thread.currentThread().interrupt();
 			}

@@ -32,20 +32,20 @@ public class MultiSSH {
 	private static File taskFile = null;
 	private static Path logPath = null;
 	private static int maxThreadPoolCount = 2;
-	private static int timeOut = 3 * 1000;
+	private static int timeOut = 3 * 1000 ;
 	
 	public static void main(String[] args) {
 		
-//		if(args != null && args.length > 0){
-//			taskName = args[0];
-//		}
+		if(args != null && args.length > 0){
+			taskName = args[0];
+		}
 		
 		Document document = null;
 		String[] commands = null;
 		Date sdt = new Date();
 		Date edt = null;
 
-		System.out.println("###################### start ######################");
+		System.out.println("[START]");
 		document = getXML(taskName);
 		commands = getCommand(document);
 		hostList = getHostList(document, commands);
@@ -67,7 +67,7 @@ public class MultiSSH {
 		showMemory();
 		edt = new Date();
 		System.out.println(Long.valueOf(edt.getTime() - sdt.getTime()) + "ms");
-		System.out.println("###################### finish ######################");
+		System.out.println("[FINISH]");
 		System.exit(0);
 	}
 
@@ -81,7 +81,7 @@ public class MultiSSH {
 			taskFile = path.resolve(taskXmlFileName).toFile();
 			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(taskFile.getCanonicalFile());
 		} catch (SAXException | IOException | ParserConfigurationException e) {
-			e.printStackTrace();
+			System.err.println("[ERROR:SYSTEM] " + e.getMessage());
 		}
 		
 		return document;
@@ -105,7 +105,7 @@ public class MultiSSH {
 				result[i] = command.getTextContent();
 			}
 		} catch (XPathExpressionException e) {
-			e.printStackTrace();
+			System.err.println("[ERROR:SYSTEM] " + e.getMessage());
 		}
 		
 		return result;
@@ -146,7 +146,7 @@ public class MultiSSH {
 				result.add(vo);
 			}
 		} catch (SAXException | IOException | ParserConfigurationException | XPathExpressionException e) {
-			e.printStackTrace();
+			System.err.println("[ERROR:SYSTEM] " + e.getMessage());
 		}
 		return result;
 	}

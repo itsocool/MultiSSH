@@ -22,7 +22,7 @@ public class MultipleShell {
 	
 	public volatile Map<HostVo, SSHRunner> runners;
 	private volatile ArrayList<HostVo> hostList;
-	private int maxThread = 2 * 4;
+	private int maxConnection = 2 * 4;
 	public volatile ExecutorService executorService;
 	private volatile int currentPosition = -1;
 	private int lastPosition = -1;
@@ -34,13 +34,13 @@ public class MultipleShell {
 		this(hostList, 0, 0, null);
 	}
 	
-	public MultipleShell(final ArrayList<HostVo> hostList, final int maxThread, final int sessionTimeOut, final Path logPath){
+	public MultipleShell(final ArrayList<HostVo> hostList, final int maxConnection, final int sessionTimeOut, final Path logPath){
 		
-		if(maxThread > 0 && maxThread < 128){
-			this.maxThread = maxThread;
+		if(maxConnection > 0 && maxConnection < 128){
+			this.maxConnection = maxConnection;
 		}
 		
-		this.executorService = Executors.newFixedThreadPool(this.maxThread);
+		this.executorService = Executors.newFixedThreadPool(this.maxConnection);
 		this.setHostList(hostList);
 		this.setLastPosition(hostList.size());
 		this.runners = new HashMap<HostVo, SSHRunner>();
@@ -77,7 +77,6 @@ public class MultipleShell {
 			}
 		}
 		dispose();
-		
 	}
 	
 	public void dispose() {

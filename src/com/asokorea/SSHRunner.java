@@ -119,6 +119,7 @@ public class SSHRunner implements Runnable {
 				System.err.println(host.getMessage(MessageType.TIMEOUT, e.getMessage()));
 			}else{
 				System.err.println(host.getMessage(MessageType.ERROR, e.getMessage()));
+//				e.printStackTrace();
 			}
 		} finally {
 			dispose();

@@ -34,7 +34,7 @@ public class HostVo {
 	
 	@Override
 	public String toString() {
-		String format = "timeStamp:\"%s\", ip:\"%s\", hostName:\"%s\"";
+		String format = "\"timeStamp\":\"%s\", \"ip\":\"%s\", \"hostName\":\"%s\"";
 		
 		return String.format(format, getTimeStamp(true), ip, hostName);
 	}
@@ -50,7 +50,7 @@ public class HostVo {
 		switch (type) {
 			
 		case MessageType.OUTPUT:
-			format = "[%s] {timeStamp:\"%s\", ip:\"%s\", hostName:\"%s\", fileName:\"%s\", dataSize:\"%d\", message:\"%s\"}";
+			format = "[%s] {\"timeStamp\":\"%s\", \"ip\":\"%s\", \"hostName\":\"%s\", \"fileName\":\"%s\", \"dataSize\":\"%d\", \"message\":\"%s\"}";
 			result = String.format(format, type, getTimeStamp(true), ip, hostName, fileName, fileSize, message);
 			break;
 			
@@ -58,7 +58,7 @@ public class HostVo {
 		case MessageType.LOGINFAIL:
 		case MessageType.TIMEOUT:
 		case MessageType.ERROR:
-			format = "[%s] {timeStamp:\"%s\", ip:\"%s\", message:\"%s\"}";
+			format = "[%s] {\"timeStamp\":\"%s\", \"ip\":\"%s\", \"message\":\"%s\"}";
 			result = String.format(format, type, getTimeStamp(true), ip, message);
 			break;
 		

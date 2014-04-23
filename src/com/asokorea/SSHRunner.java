@@ -130,12 +130,6 @@ public class SSHRunner implements Runnable {
 				}
 			}
 		} finally {
-			
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-			}
-			
 			dispose();
 		}
 	}

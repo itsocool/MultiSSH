@@ -64,7 +64,9 @@ public class MultipleShell {
 				setCurrentPosition(getCurrentPosition() + 1);
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
-				System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+				synchronized (System.err) {
+					System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+				}
 			}
 		}
 		
@@ -72,7 +74,9 @@ public class MultipleShell {
 		    try {
 				future.get();
 			} catch (InterruptedException | ExecutionException e) {
-				System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+				synchronized (System.err) {
+					System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+				}
 				future.cancel(true);
 			}
 		}
@@ -105,7 +109,9 @@ public class MultipleShell {
 					executorService.shutdownNow();
 				}
 			} catch (InterruptedException ie) {
-				System.err.println("[ERROR:SYSTEM] " + ie.getMessage());
+				synchronized (System.err) {
+					System.err.println("[ERROR:SYSTEM] " + ie.getMessage());
+				}
 				executorService.shutdownNow();
 				Thread.currentThread().interrupt();
 			}

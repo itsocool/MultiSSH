@@ -50,7 +50,7 @@ public class SSHRunner implements Runnable {
 			this.stdOut = channel.getInputStream();
 			this.stdErr = channel.getExtInputStream();
 			this.channel.connect(sessionTimeOut);
-			System.out.println(host.getMessage(MessageType.CONNECTED, "Start..."));
+			System.out.println(host.getConnectedMessage());	//INFO return connected
 
 			isRunning = true;
 			String data = "";
@@ -107,19 +107,18 @@ public class SSHRunner implements Runnable {
 				
 				host.setHostName(hostName);
 				host.setResultFile(resultPath.toFile());
-				System.out.println(host.getMessage(MessageType.OUTPUT, "OK"));
+				System.out.println(host.getCompleteMessage());	//INFO return complete
 			}
 			
 			isRunning = false;
 			data = null;
 		} catch (JSchException | IOException e) {
 			if(e.getMessage().indexOf("Connection refused") >= 0){
-				System.err.println(host.getMessage(MessageType.LOGINFAIL, e.getMessage()));
+				System.err.println(host.getErrorMessage(MessageType.LOGINFAIL, e.getMessage()));	//INFO return loginfail
 			}else if(e.getMessage().indexOf("timeout") >= 0) {
-				System.err.println(host.getMessage(MessageType.TIMEOUT, e.getMessage()));
+				System.err.println(host.getErrorMessage(MessageType.TIMEOUT, e.getMessage()));	//INFO return timeout
 			}else{
-				System.err.println(host.getMessage(MessageType.ERROR, e.getMessage()));
-//				e.printStackTrace();
+				System.err.println(host.getErrorMessage(MessageType.ERROR, e.getMessage()));	//INFO return error
 			}
 		} finally {
 			dispose();
@@ -166,5 +165,4 @@ public class SSHRunner implements Runnable {
 	public void setAutoExit(boolean autoExit) {
 		this.autoExit = autoExit;
 	}
-
 }

@@ -39,36 +39,33 @@ public class HostVo {
 		return String.format(format, getTimeStamp(true), ip, hostName);
 	}
 	
-	public String getMessage(String type, String message) {
+	public String getErrorMessage(String type, String message) {
 		
 		String result = null;
-		String format = "";
-		String fileName = (resultFile != null && resultFile.exists()) ? getResultFile().getName() : "";
-		long fileSize = (resultFile != null && resultFile.exists() && !resultFile.isDirectory()) ? resultFile.length() : 0;
-		message = (message == null || message.length() < 1) ? "" : message;
+		String format = "{\"%s\":{\"ip\":\"%s\", \"message\":\"%s\"}}";
 		
-		switch (type) {
-			
-		case MessageType.OUTPUT:
-			format = "[%s] {\"timeStamp\":\"%s\", \"ip\":\"%s\", \"hostName\":\"%s\", \"fileName\":\"%s\", \"dataSize\":\"%d\", \"message\":\"%s\"}";
-			result = String.format(format, type, getTimeStamp(true), ip, hostName, fileName, fileSize, message);
-			break;
-			
-		case MessageType.CONNECTED:
-		case MessageType.LOGINFAIL:
-		case MessageType.TIMEOUT:
-		case MessageType.ERROR:
-			format = "[%s] {\"timeStamp\":\"%s\", \"ip\":\"%s\", \"message\":\"%s\"}";
-			result = String.format(format, type, getTimeStamp(true), ip, message);
-			break;
-		
-		default:
-			break;
+		if(message != null)
+		{
+			message = message.replaceAll("\"", "\\\"");
 		}
-		
+		result = String.format(format, type, ip, message);
 		return result;
 	}
 
+	public String getConnectedMessage() {
+		String result = null;
+		String format = "{\"%s\":{\"ip\":\"%s\"}}";
+		result = String.format(format, MessageType.CONNECTED, ip);
+		return result;
+	}
+	
+	public String getCompleteMessage() {
+		String result = null;
+		String format = "{\"%s\":{\"ip\":\"%s\",\"hostName\":\"%s\",\"fileName\":\"%s\"}}";
+		result = String.format(format, MessageType.COMPLETE, ip, hostName, this.resultFile.getName());
+		return result;
+	}
+	
 	public String getIP() {
 		return ip;
 	}
@@ -112,4 +109,5 @@ public class HostVo {
 	public void setResultFile(File resultFile) {
 		this.resultFile = resultFile;
 	}
+
 }

@@ -190,8 +190,8 @@ public class MultiSSH {
 	    long total = Runtime.getRuntime().totalMemory();
 	    long max   = Runtime.getRuntime().maxMemory();
 
-    	System.out.println(String.format("Total Memory : %6.2f MB%n", (double) total / (1024 * 1024)));
-    	System.out.println(String.format("Free  Memory : %6.2f MB%n", (double) free  / (1024 * 1024)));
-    	System.out.println(String.format("Max   Memory : %6.2f MB%n", (double) max   / (1024 * 1024)));
+    	System.out.println(String.format("Total Memory : %6.2f MB", (double) total / (1024 * 1024)));
+    	System.out.println(String.format("Free  Memory : %6.2f MB", (double) free  / (1024 * 1024)));
+    	System.out.println(String.format("Max   Memory : %6.2f MB", (double) max   / (1024 * 1024)));
 	}
 }

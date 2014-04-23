@@ -38,7 +38,7 @@ public class MultiSSH {
 				taskFile = new File(args[0]);
 				taskName = args[1];
 			}else{
-				System.err.println("[ERROR]");
+				System.err.println("[ERROR] Config error");
 				System.exit(1);
 				return;
 			}
@@ -66,19 +66,25 @@ public class MultiSSH {
 			
 			shell = null;
 			
-			showMemory();
 			edt = new Date();
-			
 			timeSpan = edt.getTime() - sdt.getTime();
 			
-			System.out.println(Long.valueOf(timeSpan) + "ms");
+			synchronized (System.out) {
+				showMemory();
+				System.out.println(Long.valueOf(timeSpan) + "ms");
+			}
 			System.exit(0);
 
 		} catch (XPathExpressionException e) {
-			System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+			synchronized (System.err) {
+				System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+			}
+
 			System.exit(0);
 		} finally {
-			System.out.println("[FINISH] " + timeSpan);
+			synchronized (System.out) {
+				System.out.println("[FINISH] " + timeSpan);
+			}
 		}
 	}
 
@@ -184,8 +190,8 @@ public class MultiSSH {
 	    long total = Runtime.getRuntime().totalMemory();
 	    long max   = Runtime.getRuntime().maxMemory();
 
-	    System.out.format("Total Memory : %6.2f MB%n", (double) total / (1024 * 1024));
-	    System.out.format("Free  Memory : %6.2f MB%n", (double) free  / (1024 * 1024));
-	    System.out.format("Max   Memory : %6.2f MB%n", (double) max   / (1024 * 1024));
+    	System.out.println(String.format("Total Memory : %6.2f MB%n", (double) total / (1024 * 1024)));
+    	System.out.println(String.format("Free  Memory : %6.2f MB%n", (double) free  / (1024 * 1024)));
+    	System.out.println(String.format("Max   Memory : %6.2f MB%n", (double) max   / (1024 * 1024)));
 	}
 }

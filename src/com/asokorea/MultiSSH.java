@@ -34,13 +34,14 @@ public class MultiSSH {
 		long timeSpan = 0;
 		
 		try {
-			if(args != null && args.length > 0){
+			
+			try {
 				taskFile = new File(args[0]);
 				taskName = args[1];
-			}else{
-				System.err.println("[ERROR] Config error");
+			} catch (Exception e) {
+				System.err.print("[EXCEPTION] ");
+				e.printStackTrace();
 				System.exit(1);
-				return;
 			}
 			
 			Document configXml = getXML(taskName);
@@ -77,7 +78,8 @@ public class MultiSSH {
 
 		} catch (XPathExpressionException e) {
 			synchronized (System.err) {
-				System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+				System.err.print("[EXCEPTION] ");
+				e.printStackTrace();
 			}
 
 			System.exit(0);
@@ -95,7 +97,8 @@ public class MultiSSH {
 		try {
 			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(taskFile.getCanonicalFile());
 		} catch (SAXException | IOException | ParserConfigurationException e) {
-			System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+			System.err.print("[EXCEPTION] ");
+			e.printStackTrace();
 		}
 		
 		return document;
@@ -119,7 +122,8 @@ public class MultiSSH {
 				result[i] = command.getTextContent();
 			}
 		} catch (XPathExpressionException e) {
-			System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+			System.err.print("[EXCEPTION] ");
+			e.printStackTrace();
 		}
 		
 		return result;
@@ -157,7 +161,8 @@ public class MultiSSH {
 				}
 			}
 		} catch (SAXException | IOException | ParserConfigurationException | XPathExpressionException e) {
-			System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+			System.err.print("[EXCEPTION] ");
+			e.printStackTrace();
 		}
 		return result;
 	}
@@ -180,7 +185,8 @@ public class MultiSSH {
 			
 			result = file.toPath();
 		} catch (XPathExpressionException e) {
-			System.err.println("[ERROR:SYSTEM] " + e.getMessage());
+			System.err.print("[EXCEPTION] ");
+			e.printStackTrace();
 		}
 		return result;
 	}

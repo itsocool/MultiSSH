@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -99,10 +100,13 @@ public class SSHRunner implements Runnable {
 				if(matcher.find()) {
 					hostName = matcher.group(2);
 					
+					String format = "%s-%s-%3$T";
+					String fileName = String.format(format, hostName, host.getIP(), new Date());
+
 					if(hostName != null && hostName.length() > 0){
-						resultPath = logPath.resolve(hostName + ".txt");
+						resultPath = logPath.resolve(fileName + ".txt");
 					}else{
-						resultPath = logPath.resolve(host.getIP() + ".err");
+						resultPath = logPath.resolve(fileName + ".err");
 					}
 					
 					Files.write(resultPath, data.getBytes("UTF-8"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);

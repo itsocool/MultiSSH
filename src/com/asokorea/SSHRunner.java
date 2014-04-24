@@ -100,8 +100,8 @@ public class SSHRunner implements Runnable {
 				if(matcher.find()) {
 					hostName = matcher.group(2);
 					
-					String format = "%s-%s-%3$T";
-					String fileName = String.format(format, hostName, host.getIP(), new Date());
+					String format = "%s-%s-%3$tY%3$tm%3$td%3$tH%3$tM%3$tS";
+					String fileName = String.format(format, host.getIP(), hostName, new Date());
 
 					if(hostName != null && hostName.length() > 0){
 						resultPath = logPath.resolve(fileName + ".txt");

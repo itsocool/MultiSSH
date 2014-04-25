@@ -29,8 +29,6 @@ public class MultiSSH {
 	
 	public static void main(String[] args) {
 		
-		System.out.println("[START]");
-		
 		long timeSpan = 0;
 		
 		try {
@@ -42,6 +40,8 @@ public class MultiSSH {
 				System.err.print("[EXCEPTION] ");
 				e.printStackTrace();
 			}
+			
+			System.out.println("[SSH START]");
 			
 			Document configXml = getXML(taskName);
 			String[] commands = getCommand(configXml);
@@ -71,12 +71,9 @@ public class MultiSSH {
 			
 			synchronized (System.out) {
 				showMemory();
-				System.out.println(Long.valueOf(timeSpan) + "ms");
+				System.out.println("[SSH FINISH] " + timeSpan + "ms");
 			}
 			
-			synchronized (System.out) {
-				System.out.println("[FINISH] " + timeSpan);
-			}
 			System.exit(0);
 		} catch (XPathExpressionException e) {
 			synchronized (System.err) {

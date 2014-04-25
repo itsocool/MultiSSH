@@ -41,7 +41,6 @@ public class MultiSSH {
 			} catch (Exception e) {
 				System.err.print("[EXCEPTION] ");
 				e.printStackTrace();
-				System.exit(1);
 			}
 			
 			Document configXml = getXML(taskName);
@@ -74,18 +73,20 @@ public class MultiSSH {
 				showMemory();
 				System.out.println(Long.valueOf(timeSpan) + "ms");
 			}
+			
+			synchronized (System.out) {
+				System.out.println("[FINISH] " + timeSpan);
+			}
 			System.exit(0);
-
 		} catch (XPathExpressionException e) {
 			synchronized (System.err) {
 				System.err.print("[EXCEPTION] ");
 				e.printStackTrace();
 			}
-
-			System.exit(0);
+			System.exit(1);
 		} finally {
-			synchronized (System.out) {
-				System.out.println("[FINISH] " + timeSpan);
+			if(shell != null){
+				shell.dispose();
 			}
 		}
 	}

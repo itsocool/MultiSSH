@@ -47,6 +47,7 @@ public class HostVo {
 		if(message != null)
 		{
 			message = message.replaceAll("\"", "\\\"");
+			message = message.replaceAll("\'", "\\\'");
 		}
 		result = String.format(format, type, ip, message);
 		return result;

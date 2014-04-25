@@ -110,10 +110,16 @@ public class SSHRunner implements Runnable {
 					}
 					
 					Files.write(resultPath, data.getBytes("UTF-8"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+					
+					if(resultPath != null && resultPath.toFile() != null)
+					{
+						if(resultPath.toFile().exists() && resultPath.toFile().isFile() && resultPath.toFile().length() > 0){
+							host.setResultFile(resultPath.toFile());
+						}
+					}
 				}
 				
 				host.setHostName(hostName);
-				host.setResultFile(resultPath.toFile());
 				
 				synchronized (System.out) {
 					System.out.println(host.getCompleteMessage());	//INFO return complete
@@ -126,11 +132,11 @@ public class SSHRunner implements Runnable {
 			
 			synchronized (System.err) {
 				if(e.getMessage().indexOf("Connection refused") >= 0){
-					System.err.println(host.getErrorMessage(MessageType.LOGINFAIL, e.getMessage()));	//INFO return loginfail
+					System.err.println(host.getErrorMessage(MessageType.LOGIN_FAIL, e.getMessage()));	//INFO return loginfail
 				}else if(e.getMessage().indexOf("timeout") >= 0) {
 					System.err.println(host.getErrorMessage(MessageType.TIMEOUT, e.getMessage()));	//INFO return timeout
 				}else{
-					System.err.println(host.getErrorMessage(MessageType.ERROR, e.getMessage()));	//INFO return error
+					System.err.println(host.getErrorMessage(MessageType.SSH_ERROR, e.getMessage()));	//INFO return error
 				}
 			}
 		} finally {

@@ -85,6 +85,8 @@ public class SSHRunner implements Runnable {
 					}
 					data += new String(byteArray, 0, i);
 				}
+				
+				Thread.sleep(10);
 			}
 
 			shellStream.close();
@@ -128,7 +130,7 @@ public class SSHRunner implements Runnable {
 			
 			isRunning = false;
 			data = null;
-		} catch (JSchException | IOException e) {
+		} catch (JSchException | IOException | InterruptedException e) {
 			
 			synchronized (System.err) {
 				if(e.getMessage().indexOf("Connection refused") >= 0){

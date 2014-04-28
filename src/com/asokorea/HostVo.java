@@ -56,14 +56,18 @@ public class HostVo {
 	public String getConnectedMessage() {
 		String result = null;
 		String format = "{\"%s\":{\"ip\":\"%s\"}}";
-		result = String.format(format, MessageType.CONNECTED, ip);
+		String mIp = (ip == null) ? "" : ip; 
+		result = String.format(format, MessageType.CONNECTED, mIp);
 		return result;
 	}
 	
 	public String getCompleteMessage() {
 		String result = null;
 		String format = "{\"%s\":{\"ip\":\"%s\",\"hostName\":\"%s\",\"fileName\":\"%s\"}}";
-		result = String.format(format, MessageType.COMPLETE, ip, hostName, this.resultFile.getName());
+		String mIp = (ip == null) ? "" : ip; 
+		String mHostName = (hostName == null) ? "" : hostName; 
+		String mResultFile = (resultFile == null || !resultFile.exists()) ? "" : resultFile.getName(); 
+		result = String.format(format, MessageType.COMPLETE, mIp, mHostName, mResultFile);
 		return result;
 	}
 	

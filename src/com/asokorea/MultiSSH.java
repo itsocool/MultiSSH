@@ -138,7 +138,11 @@ public class MultiSSH {
 		try {
 			
 			xpath = XPathFactory.newInstance().newXPath();
+			
 			String exportedHostListFile = (String)xpath.evaluate("//exportedHostListFile", configXml, XPathConstants.STRING);
+			String defaultUser = (String)xpath.evaluate("//ssh/user", configXml, XPathConstants.STRING);
+			String defaultPassword = (String)xpath.evaluate("//ssh/password", configXml, XPathConstants.STRING);
+			
 			hostFile = new File(exportedHostListFile);
 			hostListXml = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(hostFile);
 			hostNodes = (NodeList)xpath.evaluate("//row", hostListXml, XPathConstants.NODESET);
@@ -152,6 +156,14 @@ public class MultiSSH {
 					String ip = (String)xpath.evaluate("./col[@number=0]", row, XPathConstants.STRING);
 					String user = (String)xpath.evaluate("./col[@number=1]", row, XPathConstants.STRING);
 					String pass = (String)xpath.evaluate("./col[@number=2]", row, XPathConstants.STRING);
+					
+					if(user == null || user.trim().length() < 1){
+						user = defaultUser;
+					}
+
+					if(pass == null || pass.trim().length() < 1){
+						pass = defaultPassword;
+					}
 					
 					HostVo vo = new HostVo(ip, user, pass);
 					vo.setCommands(commands);
